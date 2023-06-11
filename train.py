@@ -80,6 +80,7 @@ for epoch in range(1, args.epochs + 1):
         label = torch.full((batch_size,), real_label, device=device, dtype=torch.float)
         output = net_D(real_data)[0]
         err_D_real = criterion(output, label)  
+        print(err_D_real.item())
         err_D_real.backward()
 
         noise  = torch.randn((batch_size,3,32,imageSize,imageSize), device=device)
@@ -87,7 +88,11 @@ for epoch in range(1, args.epochs + 1):
         label.fill_(fake_label)
         output = net_D(fake.detach())
         output = output.data.permute(2, 0, 1, 3, 4)
-        
+        print(output.shape)
+
+
+
+
 
 
 
