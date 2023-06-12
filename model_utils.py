@@ -24,19 +24,19 @@ class CheckpointSaver:
         model_d_path = os.path.join(self.dirpath, model_d.__class__.__name__ + f'_epoch{epoch}.pt')
 
         save = metric_val<self.best_metric_val if self.decreasing else metric_val>self.best_metric_val
-        if save: 
-            logging.info(f"Current metric value better than {metric_val} better than best {self.best_metric_val}, saving model at {model_g_path} and {model_d_path}, & logging model weights to W&B.")
-            self.best_metric_val = metric_val
-            torch.save(model_g.state_dict(), model_g_path)
-            torch.save(model_d.state_dict(),model_d_path)
-            self.log_artifact(f'model-g-ckpt-epoch-{epoch}.pt', model_g_path, metric_val)
-            self.log_artifact(f'model-d-ckpt-epoch-{epoch}.pt', model_d_path, metric_val)
+        # if save: 
+        logging.info(f"Current metric value better than {metric_val} better than best {self.best_metric_val}, saving model at {model_g_path} and {model_d_path}, & logging model weights to W&B.")
+        self.best_metric_val = metric_val
+        torch.save(model_g.state_dict(), model_g_path)
+        torch.save(model_d.state_dict(),model_d_path)
+        self.log_artifact(f'model-g-ckpt-epoch-{epoch}.pt', model_g_path, metric_val)
+        self.log_artifact(f'model-d-ckpt-epoch-{epoch}.pt', model_d_path, metric_val)
 
-            self.top_model_g_paths.append({'path': model_g_path, 'score': metric_val})
-            self.top_model_d_paths.append({'path': model_g_path, 'score': metric_val})
+        self.top_model_g_paths.append({'path': model_g_path, 'score': metric_val})
+        self.top_model_d_paths.append({'path': model_g_path, 'score': metric_val})
 
-            self.top_model_g_paths = sorted(self.top_model_g_paths, key=lambda o: o['score'], reverse=not self.decreasing)
-            self.top_model_d_paths = sorted(self.top_model_d_paths, key=lambda o: o['score'], reverse=not self.decreasing)
+        self.top_model_g_paths = sorted(self.top_model_g_paths, key=lambda o: o['score'], reverse=not self.decreasing)
+        self.top_model_d_paths = sorted(self.top_model_d_paths, key=lambda o: o['score'], reverse=not self.decreasing)
 
         if len(self.top_model_g_paths)>self.top_n: 
             self.cleanup()
