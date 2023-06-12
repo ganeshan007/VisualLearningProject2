@@ -3,8 +3,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
-
 class CustomGAN_Generator(nn.Module):
     def __init__(self, ngf):
         super().__init__()
@@ -47,16 +45,16 @@ class CustomGAN_Generator(nn.Module):
         up1 = x5 + up1
 
         up2 = self.relu(self.upBN2(self.up2(up1)))
-        up2 += x4
+        up2 = x4 + up2
 
         up3 = self.relu(self.upBN3(self.up3(up2)))
-        up3 += x3
+        up3 = x3 + up3
 
         up4 = self.relu(self.upBN4(self.up4(up3)))
-        up4 += x2
+        up4 = x2 + up4
         
         up5 = self.relu(self.upBN5(self.up5(up4)))
-        up5 += x
+        up5 = x + up5
         
         out = self.tanh(self.up6(up5))
         return out
@@ -65,14 +63,12 @@ class CustomGAN_Generator(nn.Module):
 class CustomGAN_Discriminator(nn.Module):
     def __init__(self, ndf):
         super().__init__()
-        self.conv1 = nn.Conv3d(3, ndf, (3,4,4), stride=(1,2,2), padding=1, bias=False)
-        self.conv2 = nn.Conv3d(ndf, ndf*2, (4,4,4), stride=(2,2,2), padding=1, bias=False)
-        self.conv3 = nn.Conv3d(ndf*2, ndf*4, (4,4,4), stride=(2,2,2), padding=1, bias=False)
-        self.conv4 = nn.Conv3d(ndf*4, ndf*8, (4,4,4), stride=(2,2,2), padding=1, bias=False)
-        self.conv5 = nn.Conv3d(ndf*8, ndf*16, (4,4,4), stride=(2,2,2), padding=1, bias=False)
-        # self.conv6 = nn.Conv3d(ndf*16, 1, (2,4,4), stride=(1,1,1), padding=0, bias=False)
-        self.conv6 = nn.Conv3d(ndf*16, 1, (8,4,4), stride=(1,1,1), padding=0, bias=False)
-
+        self.conv1 = nn.Conv3d(3, ndf, (3,4,4), stride=(1,2,2), padding=(1,1,1), bias=False)
+        self.conv2 = nn.Conv3d(ndf, ndf*2, (4,4,4), stride=(2,2,2), padding=(1,1,1), bias=False)
+        self.conv3 = nn.Conv3d(ndf*2, ndf*4, 4, 2, 1, bias=False)
+        self.conv4 = nn.Conv3d(ndf*4, ndf*8, 4, 2, 1, bias=False)
+        self.conv5 = nn.Conv3d(ndf*8, ndf*16, 4, 2, 1, bias=False)
+        self.conv6 = nn.Conv3d(ndf*16, 1, (2,4,4), stride=(1,1,1), padding=(0,0,0), bias=False)
 
         self.BN2 = nn.BatchNorm3d(ndf*2)
         self.BN3 = nn.BatchNorm3d(ndf*4)
@@ -92,8 +88,5 @@ class CustomGAN_Discriminator(nn.Module):
         x3 = self.lrelu(self.BN5(self.conv5(x3)))
 
         out = self.sigmoid(self.conv6(x3))
-        # return out.view(-1,1), [x2,x1]
-        return out.view(-1), [x2,x1]
-
-
         
+        return out.view(-1), [x2,x1]
