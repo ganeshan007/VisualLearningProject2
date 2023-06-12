@@ -39,6 +39,14 @@ if not os.path.exists(args.outputDir):
     os.mkdir(args.outputDir)
     print('Done!')
 
+def generate_video(model='s1', outf= args.outputDir):
+	img_path = os.path.join(outf, 'samples_' + model +	'_frame_%03d.png')
+	mp4_path = os.path.join(outf, model+ '_video.mp4')
+	cmd = ('ffmpeg -loglevel warning -framerate 25 -i ' + img_path + 
+		' -qscale:v 2 -y ' + mp4_path )
+	print(cmd)
+	os.system(cmd)
+
 imageSize = 128
 num_frames = 32
 train_set = VideoFolder(root=args.dataroot,
@@ -120,7 +128,11 @@ for epoch in range(1, args.epochs + 1):
         wandb.log({'Train Generator Loss':errG.item(), 'Training Discriminator Loss': errD.item()})
         G_losses.append(errG.item())
         D_losses.append(errD.item())
+        if (epoch % 5 == 0):
+            fake = fake.permute(2, 0, 1, 3, 4)
+
     checkpoint_saver(net_G, net_D, epoch, np.mean(G_losses))
+
 
 
 
