@@ -19,7 +19,7 @@ from PIL import ImageFile
 from PIL import Image
 from data_utils import VideoFolder, SubsetRandomSampler
 from torch.utils.data import DataLoader
-from model_utils import CheckpointSaver
+from model_utils import CheckpointSaver, Metrics
 from models import CustomGAN_Generator, CustomGAN_Discriminator
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 cudnn.benchmark = True
@@ -32,6 +32,9 @@ parser.add_argument('--cuda', type=bool, default=False, help='cuda enabled')
 parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train')
 parser.add_argument('--printEvery', type=int, default=50, help='number of steps to print after')
 parser.add_argument('--outputDir', required=True, default='./results', help='path to output folder')
+parser.add_argument('--getMetrics', type=bool, default=False, help='get metrics on two different video files')
+parser.add_argument('--filePath1', type=str, default=None, help='get the file path of the first video file')
+parser.add_argument('--filePath2', type=str, default=None, help='get the file path of the second video file')
 
 args = parser.parse_args()
 print('Making output folder... \n')
@@ -132,6 +135,17 @@ for epoch in range(1, args.epochs + 1):
             fake = fake.permute(2, 0, 1, 3, 4)
 
     checkpoint_saver(net_G, net_D, epoch, np.mean(G_losses))
+
+
+if args.getMetrics:
+    print('Getting Metrics... \n')
+
+    metrics = Metrics(args.filePath1, args.filePath2)
+    mse = metrics.get_mse()
+    psnr = metrics.get_psnr()
+    ssim = metrics.get_ssim()
+
+    print(f'MSE: {mse}, \tPSNR: {psnr}, \tSSIM: {ssim}')
 
 
 

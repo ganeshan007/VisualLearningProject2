@@ -4,6 +4,8 @@ import torch
 import numpy as np
 import torch.nn as nn
 import logging
+import torchvision.io as io
+from torch.autograd import Variable
 class CheckpointSaver:
     def __init__(self, dirpath, decreasing=True, top_n=5):
         """
@@ -55,3 +57,40 @@ class CheckpointSaver:
         # for o in to_remove:
         #     os.remove(o['path'])
         # self.top_model_paths = self.top_model_paths[:self.top_n]
+
+
+class Metrics:
+    def __init__(self, filepath1, filepath2):
+        self.file_path1 = filepath1
+        self.file_path2 = filepath2
+
+    def get_mse(self):
+        video1, audio1, info1 = io.read_video(self.file_path1)
+        video2, audio2, info2 = io.read_video(self.file_path2)
+        assert video1.shape == video2.shape
+        mse = torch.mean(torch.square(video1 - video2), dtype=torch.float32)
+        return mse
+
+    def get_psnr(self):
+        video1, audio1, info1 = io.read_video(self.file_path1)
+        video2, audio2, info2 = io.read_video(self.file_path2)
+        assert video1.shape == video2.shape
+        mse = torch.mean(torch.square(video1 - video2), dtype=torch.float32)
+        psnr = 20 * torch.log10(1 / mse)
+        return psnr
+
+    def ssim(self):
+        video1, audio1, info1 = io.read_video(self.file_path1)
+        video2, audio2, info2 = io.read_video(self.file_path2)
+        assert video1.shape == video2.shape
+        video1 = torch.mean(video1, dim=3, dtype=torch.float).unsqueeze(0)
+        video2 = torch.mean(video2, dim=3, dtype=torch.float).unsqueeze(0)  
+        mu1 = torch.mean(video1)
+        mu2 = torch.mean(video2)
+        sigma1 = torch.std(video1)
+        sigma2 = torch.std(video2)
+        sigma12 = torch.mean((video1 - mu1) * (video2 - mu2))
+        c1 = 0.01 ** 2
+        c2 = 0.03 ** 2
+        ssim_val = (2 * mu1 * mu2 + c1) * (2 * sigma12 + c2) / ((mu1 ** 2 + mu2 ** 2 + c1) * (sigma1 ** 2 + sigma2 ** 2 + c2))
+        return torch.mean(ssim_val)
