@@ -1,6 +1,7 @@
 import os
 import wandb
 import torch
+import lpips
 import numpy as np
 import torch.nn as nn
 import logging
@@ -63,6 +64,7 @@ class Metrics:
     def __init__(self, filepath1, filepath2):
         self.file_path1 = filepath1
         self.file_path2 = filepath2
+        self.loss_fn_alex = lpips.LPIPS(net='alex') 
 
     def get_mse(self):
         video1, audio1, info1 = io.read_video(self.file_path1)
@@ -94,3 +96,11 @@ class Metrics:
         c2 = 0.03 ** 2
         ssim_val = (2 * mu1 * mu2 + c1) * (2 * sigma12 + c2) / ((mu1 ** 2 + mu2 ** 2 + c1) * (sigma1 ** 2 + sigma2 ** 2 + c2))
         return torch.mean(ssim_val)
+    
+    def get_pd_score(self):
+        video1, audio1, info1 = io.read_video(self.file_path1)
+        video2, audio2, info2 = io.read_video(self.file_path2)
+        assert video1.shape == video2.shape
+        vid1 = video1.permute(0,3,1,2)
+        vid2 = video2.permute(0,3,1,2)
+        for frame in range(vid1.shape[0]):
